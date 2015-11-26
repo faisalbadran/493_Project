@@ -1,6 +1,8 @@
 import sys
+from descent import descent_func
 from PyQt4 import QtGui, QtCore
-
+from PIL import Image
+from PIL import ImageOps
 
 class GUI(QtGui.QWidget):
 
@@ -48,7 +50,42 @@ class GUI(QtGui.QWidget):
         self.image_label.setAlignment(QtCore.Qt.AlignCenter)
 
     def gradient_descent(self):
-        return
+
+        image = Image.open(str(self.file_label.text()))
+        image = ImageOps.grayscale(image)
+
+        (width, height) = image.size
+
+        u = [[0 for j in range(height)] for i in range(width)]
+
+        # If white set to -1
+        # If black set to +1
+
+        for i in range(width):
+            for j in range(height):
+                if image.getpixel((i, j)) > 127:
+                    u[i][j] = 1.0
+                else:
+                    u[i][j] = -1.0
+
+        pic = u
+        t = 0
+
+        while t <= 0.1:
+            t += descent_func(pic, u)
+
+            for i in range(width):
+                for j in range(height):
+                    if u[i][j] > 0:
+                        image.putpixel((i,j), 255)
+                    else:
+                        image.putpixel((i,j), 0)
+
+            image.save("./output.png")
+            pixmap = QtGui.QPixmap("./output.png")
+            scaled_pixmap = pixmap.scaled(self.image_label.size(), QtCore.Qt.KeepAspectRatio)
+            self.image_label.setPixmap(scaled_pixmap)
+            self.image_label.setAlignment(QtCore.Qt.AlignCenter)
 
 def main():
 
