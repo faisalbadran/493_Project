@@ -58,21 +58,20 @@ class GUI(QtGui.QWidget):
         (width, height) = self.image.size
 
         u = [[0 for j in range(height + 2)] for i in range(width + 2)]
-        original_pic = [[0 for j in range(height + 2)] for i in range(width + 2)]
-        original_pic_copy = [[0 for j in range(height + 2)] for i in range(width + 2)]
-        pic = [[0 for j in range(height + 2)] for i in range(width + 2)]
+        pic = [[[0 for k in range(3)] for j in range(height + 2)] for i in range(width + 2)]
 
         # If white set to -1
         # If black set to +1
 
         for i in range(1, width + 1):
             for j in range(1, height + 1):
-                if self.image_gray.getpixel((i - 1, j - 1)) < 127:
+                print(i)
+                pic[i][j][0], pic[i][j][1], pic[i][j][2] = self.image.getpixel((i - 1, j - 1))
+
+                if pic[i][j][0] > 127 and pic[i][j][1] > 127 and pic[i][j][2] > 127:
                     u[i][j] = 1.0
                 else:
                     u[i][j] = -1.0
-
-                pic[i][j] = self.image_gray.getpixel((i - 1, j - 1))
 
 
         # print('\n'.join([''.join([' {:.0f} '.format(item) for item in row])

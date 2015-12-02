@@ -214,4 +214,4 @@ def curvature(u,i,j,disc_grad,disc_hess):
 # For image segmentation functional
 def cost_func(i,j,pic):
 
-    return (pic[i][j] - 255)**2 - (pic[i][j] - 0)**2
+    return (pic[i][j][0] - 255)**2 - (pic[i][j][0] - 0)**2 + (pic[i][j][1] - 255)**2 - (pic[i][j][1] - 0)**2 + (pic[i][j][2] - 255)**2 - (pic[i][j][2] - 0)**2
