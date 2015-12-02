@@ -11,6 +11,7 @@ def descent_func(pic, u):
     du_dx_neg = [[0 for j in range(len(u[i]))] for i in range(len(u))]
     du_dy_pos = [[0 for j in range(len(u[i]))] for i in range(len(u))]
     du_dy_neg = [[0 for j in range(len(u[i]))] for i in range(len(u))]
+    K = [[0 for j in range(len(u[i]))] for i in range(len(u))]
 
     # Calculate derivatives
     for i in range(len(u)):
@@ -21,10 +22,10 @@ def descent_func(pic, u):
             deriv_xy[i][j] = second_deriv(u,i,j,0,1)
             deriv_yy[i][j] = second_deriv(u,i,j,1,1)
             deriv_xx[i][j] = second_deriv(u,i,j,0,0)
-            du_dx_pos[i][j] = deriv(u,i,j,1,0,1)
-            du_dx_neg[i][j] = deriv(u,i,j,-1,0,1)
-            du_dy_pos[i][j] = deriv(u,i,j,1,1,1)
-            du_dy_neg[i][j] = deriv(u,i,j,-1,1,1)
+            du_dx_pos[i][j] = first_deriv(u,i,j,1,0)
+            du_dx_neg[i][j] = first_deriv(u,i,j,-1,0)
+            du_dy_pos[i][j] = first_deriv(u,i,j,1,1)
+            du_dy_neg[i][j] = first_deriv(u,i,j,-1,1)
 
     #Discrete Gradient
     disc_grad = [[],[],[],[],[],[]]
@@ -45,38 +46,57 @@ def descent_func(pic, u):
     F = [[0 for j in range(len(u[i]))] for i in range(len(u))]
     max_F = 0
 
+    for i in range(1, len(u) - 1):
+        for j in range(1, len(u[i]) - 1):
+            K[i][j] = curvature(u, i, j, disc_grad, disc_hess)
+            F[i][j] = 0
+            if abs(K[i][j] + F[i][j]) > max_F:
+                max_F = abs(K[i][j] + F[i][j])
+            #F[i][j] = cost_func(u, i, j, pic, disc_grad, disc_hess)
+
+    # Mirror image the border
     for i in range(len(u)):
-        while j in range(len(u[i])):
-            F[i][j] = cost_func(u, i, j, pic, disc_grad, disc_hess)
-            if abs(F[i][j]) > max_F:
-                max_F = F[i][j]
+        u[i][0] = u[i][1]
+        u[i][-1] = u[i][-2]
+
+    for j in range(len(u[0])):
+        u[0][j] = u[1][j]
+        u[-1][j] = u[-2][j]
+
+    # Four corners
+    u[0][0] = u[1][1]
+    u[0][-1] = u[1][-2]
+    u[-1][0] = u[-2][1]
+    u[-1][-1] = u[-2][-2]
 
     if max_F == 0:
         max_F = 1000
 
-    delta_t = 0.1
+    delta_t = 0.5/min(max_F,100)
 
     for i in range(len(u)):
-        while j in range(len(u[i])):
-            u[i][j] = u_temp[i][j] - delta_t * (max([F[i][j],0]) * grad_plus(i,j,disc_grad) + min([F[i][j],0]) * grad_minus(i,j,disc_grad))
+        for j in range(len(u[i])):
+            u[i][j] = u_temp[i][j] + delta_t * (K[i][j] * ((disc_grad[4][i][j])**2 + (disc_grad[5][i][j])**2)**0.5 - (max(F[i][j],0)*grad_plus(i,j,disc_grad)+min(F[i][j],0)*grad_minus(i,j,disc_grad)))
+            if abs(u[i][j]) > 10000:
+                u[i][j] = u[i][j]/abs(u[i][j])*10000
 
     return delta_t
 
 def grad_plus(i,j,disc_grad):
 
-    g = max([0, disc_grad[0][i][j]])**2
-    g += max([0, disc_grad[2][i][j]])**2
-    g += min([0, disc_grad[1][i][j]])**2
-    g += min([0, disc_grad[3][i][j]])**2
+    g = max([0, disc_grad[1][i][j]])**2
+    g += max([0, disc_grad[3][i][j]])**2
+    g += min([0, disc_grad[0][i][j]])**2
+    g += min([0, disc_grad[2][i][j]])**2
 
     return g**0.5
 
 def grad_minus(i,j,disc_grad):
 
-    g = min([0, discGrad[0][i][j]])**2
-    g += min([0, discGrad[2][i][j]])**2
-    g += max([0, discGrad[1][i][j]])**2
-    g += max([0, discGrad[3][i][j]])**2
+    g = min([0, disc_grad[1][i][j]])**2
+    g += min([0, disc_grad[3][i][j]])**2
+    g += max([0, disc_grad[0][i][j]])**2
+    g += max([0, disc_grad[2][i][j]])**2
 
     return g**0.5
 
@@ -105,8 +125,8 @@ def central_diff(u,i,j,direction):
 
 def second_deriv(u,i,j,first_direction,second_direction):
 
-    # direction == 0 is dy
-    # direction == 1 is dx
+    # direction == 0 is dx
+    # direction == 1 is dy
     if first_direction == 0:
         if second_direction == 1:
             if j < len(u[i]) - 1 and i < len(u) - 1:
@@ -120,12 +140,12 @@ def second_deriv(u,i,j,first_direction,second_direction):
                     return - u[i][j+1] + u[i][j]
 
         elif second_direction == 0:
-            if j > 0 and j < u[i].__len__() - 1:
+            if j > 0 and j < len(u[i]) - 1:
                 return u[i][j+1] - 2 * u[i][j] + u[i][j-1]
             else:
                 if j <= 0:
                     return u[i][j+1] - 2 * u[i][j] + -1
-                if j >= u[i].__len__() - 1:
+                if j >= len(u[i]) - 1:
                     return -1 - 2 * u[i][j] + u[i][j-1]
 
     elif first_direction == 1:
@@ -150,63 +170,53 @@ def second_deriv(u,i,j,first_direction,second_direction):
 
     return 0
 
-def deriv(u,i,j,direc,var,deg):
-    if deg == 1:
-        if var == 0:
-            if direc < 0:
-                if j > 0:
-                    return u[i][j] - u[i][j-1]
-                if j == 0:
-                    return u[i][j] + 1.0
-            if direc > 0:
-                if j < u[i].__len__() - 1:
-                    return u[i][j + 1] - u[i][j]
-                if j == u[i].__len__() - 1:
-                    return -1.0 - u[i][j]
-        if var == 1:
-            if direc > 0:
-                if i > 0:
-                    return u[i][j] - u[i-1][j]
-                if i == 0:
-                    return u[i][j] + 1.0
-            if direc < 0:
-                if i < u.__len__() - 1:
-                    return - u[i+1][j] + u[i][j]
-                if i == u[i].__len__() - 1:
-                    return 1.0 + u[i][j]
+def first_deriv(u,i,j,direc,var):
 
-    #second order derivative, if outside of domain is 0
-    elif deg == 2:
-        if var == 0:
-            if direc < 0:
-                if j > 0:
-                    return u[i][j] - u[i][j-1]
-                if j == 0:
-                    return u[i][j]
-            if direc > 0:
-                if j < len(u[i]) - 1:
-                    return u[i][j + 1] - u[i][j]
-                if j == len(u[i]) - 1:
-                    return - u[i][j]
-        if var == 1:
-            if direc > 0:
-                if i > 0:
-                    return u[i][j] - u[i-1][j]
-                if i == 0:
-                    return u[i][j]
-            if direc < 0:
-                if i < len(u) - 1:
-                    return - u[i+1][j] + u[i][j]
-                if i == len(u[i]) - 1:
-                    return u[i][j]
+    if var == 0:
+        if direc < 0:
+            if j > 0:
+                return u[i][j] - u[i][j-1]
+            if j == 0:
+                return u[i][j] + 1.0
+        if direc > 0:
+            if j < len(u[i]) - 1:
+                return u[i][j + 1] - u[i][j]
+            if j == len(u[i]) - 1:
+                return -1.0 - u[i][j]
+
+    if var == 1:
+        if direc < 0:
+            if i > 0:
+                return - u[i-1][j] + u[i][j]
+            if i == 0:
+                return u[i][j] + 1.0
+        if direc > 0:
+            if i <  len(u) - 1:
+                return u[i+1][j] - u[i][j]
+            if i == len(u) - 1:
+                return -1.0 - u[i][j]
+
     return 0
 
+# Curvature calculation
+def curvature(u,i,j,disc_grad,disc_hess):
+
+    denom = ((disc_grad[4][i][j])**2 + (disc_grad[5][i][j])**2)**1.5
+    num = disc_hess[0][0][i][j] * (disc_grad[5][i][j])**2 - 2 * disc_grad[5][i][j] * disc_grad[4][i][j] * disc_hess[0][1][i][j] + disc_hess[1][1][i][j] * (disc_grad[4][i][j])**2
+
+    if denom == 0:
+        return 0.0
+
+    return num / denom
+
+# For image segmentation functional
 def cost_func(u,i,j,pic,disc_grad,disc_hess):
 
     denom = ((disc_grad[4][i][j])**2 + (disc_grad[5][i][j])**2)**1.5
-    num = disc_hess[0][0][i][j] * (disc_grad[5][i][j])**2 - disc_grad[5][i][j] * disc_grad[4][i][j] * (disc_hess[0][1][i][j] + disc_hess[1][0][i][j]) + disc_hess[1][1][i][j] * (disc_grad[4][i][j])**2
+    num = disc_hess[0][0][i][j] * (disc_grad[5][i][j])**2 - 2 * disc_grad[5][i][j] * disc_grad[4][i][j] * disc_hess[0][1][i][j] + disc_hess[1][1][i][j] * (disc_grad[4][i][j])**2
 
     if denom == 0:
-        return 0
+        num = 0
+        denom = 1
 
-    return - num / denom
+    return 10000*num/denom + (pic[i][j] - 255)**2 - (pic[i][j] - 0)**2
