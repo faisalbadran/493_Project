@@ -50,12 +50,15 @@ class GUI(QtGui.QWidget):
 
     def gradient_descent(self):
 
-        image = Image.open(str(self.file_label.text()))
-        image = ImageOps.grayscale(image)
+        self.image = Image.open(str(self.file_label.text()))
+        self.image_copy = Image.open(str(self.file_label.text()))
+        self.image_gray = ImageOps.grayscale(self.image)
 
-        (width, height) = image.size
+        (width, height) = self.image.size
 
         u = [[0 for j in range(height + 2)] for i in range(width + 2)]
+        original_pic = [[0 for j in range(height + 2)] for i in range(width + 2)]
+        original_pic_copy = [[0 for j in range(height + 2)] for i in range(width + 2)]
         pic = [[0 for j in range(height + 2)] for i in range(width + 2)]
 
         # If white set to -1
@@ -63,12 +66,14 @@ class GUI(QtGui.QWidget):
 
         for i in range(1, width + 1):
             for j in range(1, height + 1):
-                if image.getpixel((i - 1, j - 1)) < 127:
+                if self.image.getpixel((i - 1, j - 1)) < 127:
                     u[i][j] = 1.0
                 else:
                     u[i][j] = -1.0
 
-                pic[i][j] = image.getpixel((i - 1, j - 1))
+                original_pic[i][j] = self.image.getpixel((i - 1, j - 1))
+                original_pic_copy[i][j] = self.image.getpixel((i - 1, j - 1))
+                pic[i][j] = self.image_gray.getpixel((i - 1, j - 1))
 
         # print('\n'.join([''.join(['{:.2f}'.format(item) for item in row])
         #       for row in u]))
@@ -101,15 +106,13 @@ class GUI(QtGui.QWidget):
 
             for i in range(width):
                 for j in range(height):
-                    if u[i][j] > 0:
-                        image.putpixel((i,j), 0)
-                    else:
-                        image.putpixel((i,j), 255)
+                    self.paint_black(i,j,u[i+1][j+1])
 
-            image.save("./output.png")
+            # Change to image_gray if using paint_black
+            self.image_gray.save("./output.png")
 
             if count % 100 == 0:
-                image.save("./output/"+`count`+".png")
+                self.image_gray.save("./output/"+`count`+".png")
 
             pixmap = QtGui.QPixmap("./output.png")
             scaled_pixmap = pixmap.scaled(self.image_label.size(), QtCore.Qt.KeepAspectRatio)
@@ -118,6 +121,35 @@ class GUI(QtGui.QWidget):
             print(t)
             QtGui.QApplication.processEvents()
             count += 1
+
+    def paint_black(self,i,j,val):
+        # 0 is black
+        # 255 is white
+        if val > 0:
+            self.image_gray.putpixel((i,j), 0)
+        else:
+            self.image_gray.putpixel((i,j), 255)
+
+    def paint_border(self,i,j,u):
+
+        # Paint blue border is there are any white neighbouring pixels
+
+        white_neighbours = 0
+
+        if u[i-1][j] < 0:
+            white_neighbours += 1
+        if u[i+1][j] < 0:
+            white_neighbours += 1
+        if u[i][j-1] < 0:
+            white_neighbours += 1
+        if u[i][j+1] < 0:
+            white_neighbours += 1
+
+        if white_neighbours > 0:
+            print("White")
+            self.image.putpixel((i-1,j-1), (0,0,255))
+        else:
+            self.image.putpixel((i-1,j-1), self.image_copy.getpixel((i-1, j-1)))
 
 def main():
 

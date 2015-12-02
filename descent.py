@@ -46,13 +46,15 @@ def descent_func(pic, u):
     F = [[0 for j in range(len(u[i]))] for i in range(len(u))]
     max_F = 0
 
+    epsilon = 10000
+
     for i in range(1, len(u) - 1):
         for j in range(1, len(u[i]) - 1):
             K[i][j] = curvature(u, i, j, disc_grad, disc_hess)
-            F[i][j] = 0
-            if abs(K[i][j] + F[i][j]) > max_F:
-                max_F = abs(K[i][j] + F[i][j])
-            #F[i][j] = cost_func(u, i, j, pic, disc_grad, disc_hess)
+            F[i][j] = cost_func(i, j, pic)/10000
+
+            if abs(epsilon*K[i][j] + F[i][j]) > max_F:
+                max_F = abs(epsilon*K[i][j] + F[i][j])
 
     # Mirror image the border
     for i in range(len(u)):
@@ -72,11 +74,11 @@ def descent_func(pic, u):
     if max_F == 0:
         max_F = 1000
 
-    delta_t = 0.5/min(max_F,100)
+    delta_t = 0.5/min(max_F, 1000000)
 
     for i in range(len(u)):
         for j in range(len(u[i])):
-            u[i][j] = u_temp[i][j] + delta_t * (K[i][j] * ((disc_grad[4][i][j])**2 + (disc_grad[5][i][j])**2)**0.5 - (max(F[i][j],0)*grad_plus(i,j,disc_grad)+min(F[i][j],0)*grad_minus(i,j,disc_grad)))
+            u[i][j] = u_temp[i][j] + delta_t * (epsilon*K[i][j] * ((disc_grad[4][i][j])**2 + (disc_grad[5][i][j])**2)**0.5 + (max(F[i][j],0)*grad_plus(i,j,disc_grad)+min(F[i][j],0)*grad_minus(i,j,disc_grad)))
             if abs(u[i][j]) > 10000:
                 u[i][j] = u[i][j]/abs(u[i][j])*10000
 
@@ -210,13 +212,6 @@ def curvature(u,i,j,disc_grad,disc_hess):
     return num / denom
 
 # For image segmentation functional
-def cost_func(u,i,j,pic,disc_grad,disc_hess):
+def cost_func(i,j,pic):
 
-    denom = ((disc_grad[4][i][j])**2 + (disc_grad[5][i][j])**2)**1.5
-    num = disc_hess[0][0][i][j] * (disc_grad[5][i][j])**2 - 2 * disc_grad[5][i][j] * disc_grad[4][i][j] * disc_hess[0][1][i][j] + disc_hess[1][1][i][j] * (disc_grad[4][i][j])**2
-
-    if denom == 0:
-        num = 0
-        denom = 1
-
-    return 10000*num/denom + (pic[i][j] - 255)**2 - (pic[i][j] - 0)**2
+    return (pic[i][j] - 255)**2 - (pic[i][j] - 0)**2
