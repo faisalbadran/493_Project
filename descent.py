@@ -46,12 +46,12 @@ def descent_func(pic, u):
     F = [[0 for j in range(len(u[i]))] for i in range(len(u))]
     max_F = 0
 
-    epsilon = 10000
+    epsilon = 100000
 
     for i in range(1, len(u) - 1):
         for j in range(1, len(u[i]) - 1):
             K[i][j] = curvature(u, i, j, disc_grad, disc_hess)
-            F[i][j] = cost_func(i, j, pic)/10000
+            F[i][j] = cost_func(i, j, pic)/100
 
             if abs(epsilon*K[i][j] + F[i][j]) > max_F:
                 max_F = abs(epsilon*K[i][j] + F[i][j])

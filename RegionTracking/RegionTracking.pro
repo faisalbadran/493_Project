@@ -16,8 +16,13 @@ INCLUDEPATH += . /usr/local/Cellar/imagemagick/6.9.3-0_2/include/ImageMagick-6
 LIBS += -L/usr/local/lib -lMagick++-6.Q16
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+        levelset.cpp
 
-HEADERS  += mainwindow.h
+QMAKE_CXXFLAGS += -DMAGICKCORE_HDRI_ENABLE=false -DMAGICKCORE_QUANTUM_DEPTH=8 \
+               -isystem /usr/local/Cellar/imagemagick/6.9.3-0_2/include/ImageMagick-6
+
+HEADERS  += mainwindow.h \
+         levelset.h
 
 FORMS    += mainwindow.ui

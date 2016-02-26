@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "levelset.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -23,6 +25,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     void get_picture();
+    LevelSet m_level_set;
 };
 
 #endif // MAINWINDOW_H

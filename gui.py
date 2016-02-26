@@ -65,10 +65,10 @@ class GUI(QtGui.QWidget):
 
         for i in range(1, width + 1):
             for j in range(1, height + 1):
-                print(i)
                 pic[i][j][0], pic[i][j][1], pic[i][j][2] = self.image.getpixel((i - 1, j - 1))
 
-                if pic[i][j][0] > 127 and pic[i][j][1] > 127 and pic[i][j][2] > 127:
+                # Draw circle in the middle
+                if ((i-width/2)**2+(j-height/2)**2)**0.5 < 36:
                     u[i][j] = 1.0
                 else:
                     u[i][j] = -1.0
