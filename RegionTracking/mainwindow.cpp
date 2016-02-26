@@ -1,13 +1,13 @@
-#include <Magick++.h>
-using namespace Magick;
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "levelset.h"
 
+#include <math.h>
+
 #include <QDir>
 #include <QFileDialog>
 #include <QGraphicsScene>
+#include <QImage>
 #include <QLabel>
 #include <QPixmap>
 #include <QString>
@@ -36,11 +36,11 @@ void MainWindow::on_run_button_clicked()
         {
             if (pow((pow(i-m_level_set.m_width/2,2)+pow(j-m_level_set.m_height/2,2)),0.5) < 36)
             {
-                m_level_set.m_u[i][j] = 1.0;
+                m_level_set.m_u.at(i).at(j) = 1.0;
             }
             else
             {
-                m_level_set.m_u[i][j] = -1.0;
+                m_level_set.m_u.at(i).at(j)= -1.0;
             }
         }
     }
@@ -48,36 +48,38 @@ void MainWindow::on_run_button_clicked()
     // Mirror image the border
     for(int i = 0; i < m_level_set.m_width; i++)
     {
-        m_level_set.m_u[i][0] = m_level_set.m_u[i][1];
-        m_level_set.m_u[i][m_level_set.m_width - 1] = m_level_set.m_u[i][m_level_set.m_width - 2];
+        m_level_set.m_u.at(i).at(0) = m_level_set.m_u.at(i).at(1);
+        m_level_set.m_u.at(i).at(m_level_set.m_height - 1) = m_level_set.m_u.at(i).at(m_level_set.m_height - 2);
     }
 
     for(int j = 0; j < m_level_set.m_height; j++)
     {
-        m_level_set.m_u[0][j] = m_level_set.m_u[1][j];
-        m_level_set.m_u[m_level_set.m_height - 1][j] = m_level_set.m_u[m_level_set.m_height - 2][j];
+        m_level_set.m_u.at(0).at(j) = m_level_set.m_u.at(1).at(j);
+        m_level_set.m_u.at(m_level_set.m_width - 1).at(j) = m_level_set.m_u.at(m_level_set.m_width - 2).at(j);
     }
 
     // Four corners
-    m_level_set.m_u[0][0] = m_level_set.m_u[1][1];
-    m_level_set.m_u[0][m_level_set.m_width - 1] = m_level_set.m_u[1][m_level_set.m_width - 2];
-    m_level_set.m_u[m_level_set.m_height - 1][0] = m_level_set.m_u[m_level_set.m_height - 2][1];
-    m_level_set.m_u[m_level_set.m_height - 1][m_level_set.m_width - 1] = m_level_set.m_u[m_level_set.m_height-2][m_level_set.m_width - 2];
+    m_level_set.m_u.at(0).at(0) = m_level_set.m_u.at(1).at(1);
+    m_level_set.m_u.at(0).at(m_level_set.m_height - 1) = m_level_set.m_u.at(1).at(m_level_set.m_height - 2);
+    m_level_set.m_u.at(m_level_set.m_width - 1).at(0) = m_level_set.m_u.at(m_level_set.m_width - 2).at(1);
+    m_level_set.m_u.at(m_level_set.m_width - 1).at(m_level_set.m_height - 1) = m_level_set.m_u.at(m_level_set.m_width-2).at(m_level_set.m_height - 2);
 
     float t = 0;
     int count = 0;
 
-    while(count < 1)
+    while(count <= 1000)
     {
         t += m_level_set.descent_func();
 
+        printf("%0.10f\n",t);
+
         m_level_set.paint_border();
 
-        m_level_set.m_image.write("output.png");
+        m_level_set.m_image.save("output.png");
 
         if(count % 100 == 0)
         {
-            //m_level_set.m_image.write("./output/" + std::to_string(count) + ".png");
+            m_level_set.m_image.save(QString::fromStdString("./output/" + std::to_string(count) + ".png"));
         }
 
         /*
@@ -116,7 +118,7 @@ void MainWindow::get_picture(){
     ui->graphicsView->fitInView(scene->itemsBoundingRect() ,Qt::KeepAspectRatio);
     ui->graphicsView->setScene(scene);
 
-    Image image(fileName.toStdString());
+    QImage image(fileName);
 
     m_level_set = LevelSet(image);
 }
