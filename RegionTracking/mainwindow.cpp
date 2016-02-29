@@ -35,7 +35,7 @@ void MainWindow::on_run_button_clicked()
     {
         for(int j = 1; j < m_level_set.m_height - 1; j++)
         {
-            if (pow((pow(i+1-m_level_set.m_width/2,2)+pow(j+1-m_level_set.m_height/2,2)),0.5) < 16)
+            if (pow((pow(i+1-m_level_set.m_width/2,2)+pow(j+1-m_level_set.m_height/2,2)),0.5) < 36)
             {
                 m_level_set.m_u.at(i+1).at(j+1) = 1.0;
             }
@@ -72,11 +72,7 @@ void MainWindow::on_run_button_clicked()
     {
         t += m_level_set.descent_func();
 
-        printf("%0.10f\n",t);
-
         m_level_set.paint_border();
-
-        m_level_set.m_image.save("output.png");
 
         if(count % 100 == 0)
         {

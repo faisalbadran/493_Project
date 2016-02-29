@@ -11,6 +11,7 @@ LevelSet::LevelSet()
 
 LevelSet::LevelSet(QImage image)
 {
+    m_image_master = image;
     m_image = image;
 
     // Initialize derivative arrays
@@ -25,6 +26,7 @@ LevelSet::LevelSet(QImage image)
     m_central_diff_y.resize(m_width, std::vector<float>(m_height, 0.0));
 
     m_deriv_xy.resize(m_width, std::vector<float>(m_height, 0.0));
+    m_deriv_yx.resize(m_width, std::vector<float>(m_height, 0.0));
     m_deriv_xx.resize(m_width, std::vector<float>(m_height, 0.0));
     m_deriv_yy.resize(m_width, std::vector<float>(m_height, 0.0));
 
@@ -53,15 +55,16 @@ float LevelSet::descent_func()
         for(int j=0; j < m_height; j++)
         {
             m_u_temp.at(i).at(j) = m_u.at(i).at(j);
-            m_central_diff_x.at(i).at(j) = central_diff(i,j,0);
-            m_central_diff_y.at(i).at(j) = central_diff(i,j,1);
-            m_deriv_xy.at(i).at(j) = second_deriv(i,j,0,1);
-            m_deriv_yy.at(i).at(j) = second_deriv(i,j,1,1);
-            m_deriv_xx.at(i).at(j)= second_deriv(i,j,0,0);
-            m_du_dx_pos.at(i).at(j) = first_deriv(i,j,1,0);
-            m_du_dx_neg.at(i).at(j) = first_deriv(i,j,-1,0);
-            m_du_dy_pos.at(i).at(j) = first_deriv(i,j,1,1);
-            m_du_dy_neg.at(i).at(j) = first_deriv(i,j,-1,1);
+            m_central_diff_x.at(i).at(j) = central_diff(i,j,1);
+            m_central_diff_y.at(i).at(j) = central_diff(i,j,0);
+            m_deriv_xy.at(i).at(j) = second_deriv(i,j,1,0);
+            m_deriv_yx.at(i).at(j) = second_deriv(i,j,0,1);
+            m_deriv_yy.at(i).at(j) = second_deriv(i,j,0,0);
+            m_deriv_xx.at(i).at(j)= second_deriv(i,j,1,1);
+            m_du_dx_pos.at(i).at(j) = first_deriv(i,j,1,1);
+            m_du_dx_neg.at(i).at(j) = first_deriv(i,j,-1,1);
+            m_du_dy_pos.at(i).at(j) = first_deriv(i,j,1,0);
+            m_du_dy_neg.at(i).at(j) = first_deriv(i,j,-1,0);
         }
     }
 
@@ -76,7 +79,7 @@ float LevelSet::descent_func()
     // Discrete Hessian
     m_disc_hess.at(0).at(0) = m_deriv_xx;
     m_disc_hess.at(0).at(1) = m_deriv_xy;
-    m_disc_hess.at(1).at(0) = m_deriv_xy;
+    m_disc_hess.at(1).at(0) = m_deriv_yx;
     m_disc_hess.at(1).at(1) = m_deriv_yy;
 
     float max_F = 0.0;
@@ -88,8 +91,8 @@ float LevelSet::descent_func()
         for(int j=1; j < m_height-1; j++)
         {
             m_K.at(i).at(j) = curvature(i, j);
+            //m_F.at(i).at(j) = cost_func(i-1, j-1);
             m_F.at(i).at(j) = 0;
-            //m_F.at(i+1).at(j+1) = cost_func(i+1, j+1)/10000;
 
             if(fabs(epsilon*m_K.at(i).at(j) + m_F.at(i).at(j)) > max_F)
             {
@@ -122,7 +125,7 @@ float LevelSet::descent_func()
         max_F = 10000;
     }
 
-    float delta_t = 0.5/fmin(max_F,10000.0);
+    float delta_t = 1/fmin(max_F,100000.0);
 
     for(int i=0; i < m_width; i++)
     {
@@ -241,19 +244,19 @@ float LevelSet::second_deriv(int i, int j, int first_direction, int second_direc
         }
         else if(second_direction == 0)
         {
-            if(j > 0 and j < m_height - 1)
+            if(j < m_height - 2)
             {
-                return m_u.at(i).at(j+1) - 2 * m_u.at(i).at(j) + m_u.at(i).at(j-1);
+                return m_u.at(i).at(j+2) - 2 * m_u.at(i).at(j+1) + m_u.at(i).at(j);
             }
             else
             {
-                if(j <= 0)
+                if(j == m_height - 2)
                 {
-                    return m_u.at(i).at(j+1) - 2 * m_u.at(i).at(j) + -1;
+                    return -1 - 2 * m_u.at(i).at(j+1) + m_u.at(i).at(j);
                 }
-                if(j >= m_height - 1)
+                else if(j == m_height - 1)
                 {
-                    return -1 - 2 * m_u.at(i).at(j) + m_u.at(i).at(j-1);
+                    return -1 - 2 * -1 + m_u.at(i).at(j);
                 }
             }
         }
@@ -285,19 +288,19 @@ float LevelSet::second_deriv(int i, int j, int first_direction, int second_direc
         }
         else if(second_direction == 1)
         {
-            if(i > 0 and i < m_width - 1)
+            if(i < m_width - 2)
             {
-                return m_u.at(i+1).at(j) - 2 * m_u.at(i).at(j) + m_u.at(i-1).at(j);
+                return m_u.at(i+2).at(j) - 2 * m_u.at(i+1).at(j) + m_u.at(i).at(j);
             }
             else
             {
-                if(i <= 0)
+                if(i == m_width - 2)
                 {
-                    return m_u.at(i+1).at(j) - 2 * m_u.at(i).at(j) + -1;
+                    return -1 - 2 * m_u.at(i+1).at(j) + m_u.at(i).at(j);
                 }
-                if(i >= m_width - 1)
+                else if(i == m_width - 1)
                 {
-                    return -1 - 2 * m_u.at(i).at(j) + m_u.at(i-1).at(j);
+                    return -1 - 2 * -1 + m_u.at(i).at(j);
                 }
             }
         }
@@ -308,6 +311,13 @@ float LevelSet::second_deriv(int i, int j, int first_direction, int second_direc
 
 float LevelSet::first_deriv(int i, int j, int direc, int var)
 {
+    /* var
+     * == 0 , y
+     * == 1 , x
+     * direc
+     * > 0 , forward difference
+     * < 0 , backward difference
+     */
     if(var == 0)
     {
         if(direc < 0)
@@ -339,7 +349,7 @@ float LevelSet::first_deriv(int i, int j, int direc, int var)
         {
             if(i > 0)
             {
-                return - m_u.at(i-1).at(j) + m_u.at(i).at(j);
+                return m_u.at(i).at(j) - m_u.at(i-1).at(j);
             }
             if(i == 0)
             {
@@ -390,6 +400,8 @@ void LevelSet::paint_border()
 
     int white_neighbours = 0;
 
+    m_image = m_image_master;
+
     for(int i = 1; i < m_width-1; i++)
     {
         for(int j = 1; j < m_height-1; j++)
@@ -434,7 +446,7 @@ void LevelSet::paint_border()
 
             if(white_neighbours > 0)
             {
-                m_image.setPixel(i, j, qRgb(0,0,255));
+                m_image.setPixel(i-1, j-1, qRgb(0,0,255));
             }
         }
     }

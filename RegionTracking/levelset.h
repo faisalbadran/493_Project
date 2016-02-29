@@ -22,6 +22,7 @@ public:
     void paint_border();
     ~LevelSet();
 
+    QImage m_image_master;
     QImage m_image;
     int m_width;
     int m_height;
@@ -34,6 +35,7 @@ private:
     std::vector<std::vector<float> > m_central_diff_y;
 
     std::vector<std::vector<float> > m_deriv_xy;
+    std::vector<std::vector<float> > m_deriv_yx;
     std::vector<std::vector<float> > m_deriv_xx;
     std::vector<std::vector<float> > m_deriv_yy;
 
