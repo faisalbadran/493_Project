@@ -4,6 +4,7 @@
 
 #include <math.h>
 
+#include <QApplication>
 #include <QDir>
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -34,13 +35,13 @@ void MainWindow::on_run_button_clicked()
     {
         for(int j = 1; j < m_level_set.m_height - 1; j++)
         {
-            if (pow((pow(i-m_level_set.m_width/2,2)+pow(j-m_level_set.m_height/2,2)),0.5) < 36)
+            if (pow((pow(i+1-m_level_set.m_width/2,2)+pow(j+1-m_level_set.m_height/2,2)),0.5) < 16)
             {
-                m_level_set.m_u.at(i).at(j) = 1.0;
+                m_level_set.m_u.at(i+1).at(j+1) = 1.0;
             }
             else
             {
-                m_level_set.m_u.at(i).at(j)= -1.0;
+                m_level_set.m_u.at(i+1).at(j+1)= -1.0;
             }
         }
     }
@@ -67,7 +68,7 @@ void MainWindow::on_run_button_clicked()
     float t = 0;
     int count = 0;
 
-    while(count <= 1000)
+    while(count <= 10000)
     {
         t += m_level_set.descent_func();
 
@@ -82,13 +83,16 @@ void MainWindow::on_run_button_clicked()
             m_level_set.m_image.save(QString::fromStdString("./output/" + std::to_string(count) + ".png"));
         }
 
-        /*
-        pixmap = QtGui.QPixmap("./output.png")
-        scaled_pixmap = pixmap.scaled(self.image_label.size(), QtCore.Qt.KeepAspectRatio)
-        self.image_label.setPixmap(scaled_pixmap)
-        self.image_label.setAlignment(QtCore.Qt.AlignCenter)
-        print(t)
-        QtGui.QApplication.processEvents()*/
+
+        QPixmap pixmap(QPixmap::fromImage(m_level_set.m_image));
+        QGraphicsScene* scene = new QGraphicsScene;
+        scene->addPixmap(pixmap);
+
+        ui->graphicsView->fitInView(scene->itemsBoundingRect() ,Qt::KeepAspectRatio);
+        ui->graphicsView->setScene(scene);
+
+        ui->graphicsView->repaint();
+        qApp->processEvents();
 
         count += 1;
     }
@@ -111,14 +115,14 @@ void MainWindow::get_picture(){
 
     ui->open_label->setText(fileName);
 
-    QGraphicsScene *scene = new QGraphicsScene();
-    QPixmap pixmap(fileName);
+    QImage image(fileName);
+
+    QPixmap pixmap(QPixmap::fromImage(image));
+    QGraphicsScene* scene = new QGraphicsScene;
     scene->addPixmap(pixmap);
 
     ui->graphicsView->fitInView(scene->itemsBoundingRect() ,Qt::KeepAspectRatio);
     ui->graphicsView->setScene(scene);
-
-    QImage image(fileName);
 
     m_level_set = LevelSet(image);
 }
