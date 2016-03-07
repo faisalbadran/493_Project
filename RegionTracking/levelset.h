@@ -20,6 +20,7 @@ public:
     float curvature(int i, int j);
     float cost_func(int i, int j);
     void paint_border();
+    void mirror_u();
     ~LevelSet();
 
     QImage m_image_master;

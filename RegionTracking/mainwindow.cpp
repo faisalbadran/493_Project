@@ -31,44 +31,28 @@ void MainWindow::on_run_button_clicked()
     // If outside region set to -1
     // If inside region set to +1
 
-    for(int i = 1; i < m_level_set.m_width - 1; i++)
+    for(int i = 1; i < m_level_set.m_width-1; i++)
     {
-        for(int j = 1; j < m_level_set.m_height - 1; j++)
+        for(int j = 1; j < m_level_set.m_height-1; j++)
         {
-            if (pow((pow(i+1-m_level_set.m_width/2,2)+pow(j+1-m_level_set.m_height/2,2)),0.5) < 36)
+            if (pow((pow(i-m_level_set.m_width/2,2)+pow(j-m_level_set.m_height/2,2)),0.5) < 25)
             {
-                m_level_set.m_u.at(i+1).at(j+1) = 1.0;
+                m_level_set.m_u.at(i).at(j) = 1.0;
             }
             else
             {
-                m_level_set.m_u.at(i+1).at(j+1)= -1.0;
+                m_level_set.m_u.at(i).at(j)= -1.0;
             }
         }
     }
 
     // Mirror image the border
-    for(int i = 0; i < m_level_set.m_width; i++)
-    {
-        m_level_set.m_u.at(i).at(0) = m_level_set.m_u.at(i).at(1);
-        m_level_set.m_u.at(i).at(m_level_set.m_height - 1) = m_level_set.m_u.at(i).at(m_level_set.m_height - 2);
-    }
-
-    for(int j = 0; j < m_level_set.m_height; j++)
-    {
-        m_level_set.m_u.at(0).at(j) = m_level_set.m_u.at(1).at(j);
-        m_level_set.m_u.at(m_level_set.m_width - 1).at(j) = m_level_set.m_u.at(m_level_set.m_width - 2).at(j);
-    }
-
-    // Four corners
-    m_level_set.m_u.at(0).at(0) = m_level_set.m_u.at(1).at(1);
-    m_level_set.m_u.at(0).at(m_level_set.m_height - 1) = m_level_set.m_u.at(1).at(m_level_set.m_height - 2);
-    m_level_set.m_u.at(m_level_set.m_width - 1).at(0) = m_level_set.m_u.at(m_level_set.m_width - 2).at(1);
-    m_level_set.m_u.at(m_level_set.m_width - 1).at(m_level_set.m_height - 1) = m_level_set.m_u.at(m_level_set.m_width-2).at(m_level_set.m_height - 2);
+    m_level_set.mirror_u();
 
     float t = 0;
     int count = 0;
 
-    while(count <= 10000)
+    while(count <= 100000)
     {
         t += m_level_set.descent_func();
 
@@ -89,6 +73,8 @@ void MainWindow::on_run_button_clicked()
 
         ui->graphicsView->repaint();
         qApp->processEvents();
+
+        delete scene;
 
         count += 1;
     }

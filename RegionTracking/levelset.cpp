@@ -50,9 +50,9 @@ LevelSet::~LevelSet()
 float LevelSet::descent_func()
 {
     // Calculate derivatives
-    for(int i=0; i < m_width; i++)
+    for(int i=1; i < m_width-1; i++)
     {
-        for(int j=0; j < m_height; j++)
+        for(int j=1; j < m_height-1; j++)
         {
             m_u_temp.at(i).at(j) = m_u.at(i).at(j);
             m_central_diff_x.at(i).at(j) = central_diff(i,j,1);
@@ -67,6 +67,8 @@ float LevelSet::descent_func()
             m_du_dy_neg.at(i).at(j) = first_deriv(i,j,-1,0);
         }
     }
+
+    mirror_u();
 
     // Discrete Gradient
     m_disc_grad.at(0) = m_du_dx_pos;
@@ -84,15 +86,14 @@ float LevelSet::descent_func()
 
     float max_F = 0.0;
 
-    float epsilon = 100.0;
+    float epsilon = 1000.0;
 
     for(int i=1; i < m_width-1; i++)
     {
         for(int j=1; j < m_height-1; j++)
         {
             m_K.at(i).at(j) = curvature(i, j);
-            //m_F.at(i).at(j) = cost_func(i-1, j-1);
-            m_F.at(i).at(j) = 0;
+            m_F.at(i).at(j) = cost_func(i, j)/500.0;
 
             if(fabs(epsilon*m_K.at(i).at(j) + m_F.at(i).at(j)) > max_F)
             {
@@ -101,37 +102,18 @@ float LevelSet::descent_func()
         }
     }
 
-    // Mirror image the border
-    for(int i=1; i < m_width-1; i++)
-    {
-        m_u.at(i).at(0) = m_u.at(i).at(1);
-        m_u.at(i).at(m_height-1) = m_u.at(i).at(m_height-2);
-    }
-
-    for(int j=1; j < m_height-1; j++)
-    {
-        m_u.at(0).at(j) = m_u.at(1).at(j);
-        m_u.at(m_width-1).at(j) = m_u.at(m_width-2).at(j);
-    }
-
-    // Four corners
-    m_u.at(0).at(0) = m_u.at(1).at(1);
-    m_u.at(0).at(m_height-1) = m_u.at(1).at(m_height-2);
-    m_u.at(m_width-1).at(0) = m_u.at(m_width-2).at(1);
-    m_u.at(m_width-1).at(m_height-1) = m_u.at(m_width-2).at(m_height-2);
-
     if(max_F == 0)
     {
         max_F = 10000;
     }
 
-    float delta_t = 1/fmin(max_F,100000.0);
+    float delta_t = 1/fmin(max_F, 10000.0);
 
-    for(int i=0; i < m_width; i++)
+    for(int i=1; i < m_width-1; i++)
     {
-        for(int j=0; j < m_height; j++)
+        for(int j=1; j < m_height-1; j++)
         {
-            m_u.at(i).at(j) = m_u_temp.at(i).at(j) + delta_t * (epsilon*m_K.at(i).at(j) * pow(pow(m_disc_grad.at(4).at(i).at(j),2) + pow(m_disc_grad.at(5).at(i).at(j),2),0.5) + (fmax(m_F.at(i).at(j),0)*grad_plus(i,j)+fmin(m_F.at(i).at(j),0)*grad_minus(i,j)));
+            m_u.at(i).at(j) = m_u_temp.at(i).at(j) + delta_t * (epsilon*m_K.at(i).at(j) * pow(pow(m_disc_grad.at(4).at(i).at(j),2) + pow(m_disc_grad.at(5).at(i).at(j),2),0.5) - (fmax(m_F.at(i).at(j),0)*grad_plus(i,j)+fmin(m_F.at(i).at(j),0)*grad_minus(i,j)));
 
             // Limit size of u
             if(fabs(m_u.at(i).at(j)) > 10000)
@@ -140,6 +122,8 @@ float LevelSet::descent_func()
             }
         }
     }
+
+    mirror_u();
 
     return delta_t;
 }
@@ -173,39 +157,11 @@ float LevelSet::central_diff(int i, int j, int direction){
 
     if(direction == 0)
     {
-        if(j >= m_height - 1)
-        {
-            return (-1 - m_u.at(i).at(j-1)) / 2;
-        }
-        else
-        {
-            if(j <= 0)
-            {
-                return (m_u.at(i).at(j+1) + 1) / 2;
-            }
-            else
-            {
-                return (m_u.at(i).at(j+1) - m_u.at(i).at(j-1)) / 2;
-            }
-        }
+        return (m_u.at(i).at(j+1) - m_u.at(i).at(j-1)) / 2;
     }
     if(direction == 1)
     {
-        if(i >= m_width - 1)
-        {
-            return (-1 - m_u.at(i-1).at(j)) / 2;
-        }
-        else
-        {
-            if(i <= 0)
-            {
-                return (m_u.at(i+1).at(j) + 1) / 2;
-            }
-            else
-            {
-                return (m_u.at(i+1).at(j) - m_u.at(i-1).at(j)) / 2;
-            }
-        }
+        return (m_u.at(i+1).at(j) - m_u.at(i-1).at(j)) / 2;
     }
 
     return 0;
@@ -222,43 +178,11 @@ float LevelSet::second_deriv(int i, int j, int first_direction, int second_direc
     {
         if(second_direction == 1)
         {
-            if(j < m_height - 1 and i < m_width - 1)
-            {
-                return m_u.at(i+1).at(j+1) - m_u.at(i).at(j+1) - m_u.at(i+1).at(j) + m_u.at(i).at(j);
-            }
-            else
-            {
-                if(j >= m_height - 1 and i >= m_width - 1)
-                {
-                    return 1 + m_u.at(i).at(j);
-                }
-                if(j >= m_height - 1)
-                {
-                    return - m_u.at(i+1).at(j) + m_u.at(i).at(j);
-                }
-                if(i >= m_width - 1)
-                {
-                    return - m_u.at(i).at(j+1) + m_u.at(i).at(j);
-                }
-            }
+            return (m_u.at(i+1).at(j+1) - m_u.at(i-1).at(j+1) - m_u.at(i+1).at(j-1) + m_u.at(i-1).at(j-1))/4;
         }
         else if(second_direction == 0)
         {
-            if(j < m_height - 2)
-            {
-                return m_u.at(i).at(j+2) - 2 * m_u.at(i).at(j+1) + m_u.at(i).at(j);
-            }
-            else
-            {
-                if(j == m_height - 2)
-                {
-                    return -1 - 2 * m_u.at(i).at(j+1) + m_u.at(i).at(j);
-                }
-                else if(j == m_height - 1)
-                {
-                    return -1 - 2 * -1 + m_u.at(i).at(j);
-                }
-            }
+            return m_u.at(i).at(j+1) - 2*m_u.at(i).at(j) + m_u.at(i).at(j-1);
         }
     }
 
@@ -266,43 +190,11 @@ float LevelSet::second_deriv(int i, int j, int first_direction, int second_direc
     {
         if(second_direction == 0)
         {
-            if(j < m_height - 1 and i < m_width - 1)
-            {
-                return m_u.at(i+1).at(j+1) - m_u.at(i).at(j+1) - m_u.at(i+1).at(j) + m_u.at(i).at(j);
-            }
-            else
-            {
-                if(j >= m_height - 1 and i >= m_width - 1)
-                {
-                    return 1 + m_u.at(i).at(j);
-                }
-                if(i >= m_width - 1)
-                {
-                    return - m_u.at(i).at(j+1) + m_u.at(i).at(j);
-                }
-                if(j >= m_height - 1)
-                {
-                    return - m_u.at(i+1).at(j) + m_u.at(i).at(j);
-                }
-            }
+            return (m_u.at(i+1).at(j+1) - m_u.at(i-1).at(j+1) - m_u.at(i+1).at(j-1) + m_u.at(i-1).at(j-1))/4;
         }
         else if(second_direction == 1)
         {
-            if(i < m_width - 2)
-            {
-                return m_u.at(i+2).at(j) - 2 * m_u.at(i+1).at(j) + m_u.at(i).at(j);
-            }
-            else
-            {
-                if(i == m_width - 2)
-                {
-                    return -1 - 2 * m_u.at(i+1).at(j) + m_u.at(i).at(j);
-                }
-                else if(i == m_width - 1)
-                {
-                    return -1 - 2 * -1 + m_u.at(i).at(j);
-                }
-            }
+            return m_u.at(i+1).at(j) - 2*m_u.at(i).at(j) + m_u.at(i-1).at(j);
         }
     }
 
@@ -322,50 +214,22 @@ float LevelSet::first_deriv(int i, int j, int direc, int var)
     {
         if(direc < 0)
         {
-            if(j > 0)
-            {
-                return m_u.at(i).at(j) - m_u.at(i).at(j-1);
-            }
-            if(j == 0)
-            {
-                return m_u.at(i).at(j) + 1.0;
-            }
+            return m_u.at(i).at(j) - m_u.at(i).at(j-1);
         }
         if(direc > 0)
         {
-            if(j < m_height - 1)
-            {
-                return m_u.at(i).at(j + 1) - m_u.at(i).at(j);
-            }
-            if(j == m_height - 1)
-            {
-                return -1.0 - m_u.at(i).at(j);
-            }
+            return m_u.at(i).at(j + 1) - m_u.at(i).at(j);
         }
     }
     if(var == 1)
     {
         if(direc < 0)
         {
-            if(i > 0)
-            {
-                return m_u.at(i).at(j) - m_u.at(i-1).at(j);
-            }
-            if(i == 0)
-            {
-                return m_u.at(i).at(j) + 1.0;
-            }
+            return m_u.at(i).at(j) - m_u.at(i-1).at(j);
         }
         if(direc > 0)
         {
-            if(i <  m_width- 1)
-            {
-                return m_u.at(i+1).at(j) - m_u.at(i).at(j);
-            }
-            if(i == m_width - 1)
-            {
-                return -1.0 - m_u.at(i).at(j);
-            }
+            return m_u.at(i+1).at(j) - m_u.at(i).at(j);
         }
     }
 
@@ -389,9 +253,9 @@ float LevelSet::curvature(int i, int j)
 // For image segmentation functional
 float LevelSet::cost_func(int i, int j)
 {
-    QRgb pixel = m_image.pixel(i, j);
+    QRgb pixel = m_image.pixel(i-1, j-1);
 
-    return pow(qRed(pixel) - 255,2) - pow(qRed(pixel) - 0,2) + pow(qGreen(pixel) - 255,2) - pow(qGreen(pixel) - 0,2) + pow(qBlue(pixel) - 255,2) - pow(qBlue(pixel) - 0,2);
+    return pow(qRed(pixel) - 0,2) - pow(qRed(pixel) - 255,2) + pow(qGreen(pixel) - 0,2) - pow(qGreen(pixel) - 255,2) + pow(qBlue(pixel) - 0,2) - pow(qBlue(pixel) - 255,2);
 }
 
 void LevelSet::paint_border()
@@ -450,4 +314,25 @@ void LevelSet::paint_border()
             }
         }
     }
+}
+
+void LevelSet::mirror_u(){
+    // Mirror image the border
+    for(int i=1; i < m_width; i++)
+    {
+        m_u.at(i).at(0) = m_u.at(i).at(1);
+        m_u.at(i).at(m_height-1) = m_u.at(i).at(m_height-2);
+    }
+
+    for(int j=1; j < m_height; j++)
+    {
+        m_u.at(0).at(j) = m_u.at(1).at(j);
+        m_u.at(m_width-1).at(j) = m_u.at(m_width-2).at(j);
+    }
+
+    // Four corners
+    m_u.at(0).at(0) = m_u.at(1).at(1);
+    m_u.at(0).at(m_height-1) = m_u.at(1).at(m_height-2);
+    m_u.at(m_width-1).at(0) = m_u.at(m_width-2).at(1);
+    m_u.at(m_width-1).at(m_height-1) = m_u.at(m_width-2).at(m_height-2);
 }
