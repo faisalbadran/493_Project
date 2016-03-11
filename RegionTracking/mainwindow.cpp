@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "levelset.h"
 
+#include <algorithm>
 #include <math.h>
 
 #include <QApplication>
@@ -27,15 +28,22 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_run_button_clicked()
 {
+    // Create output firectory
+    unsigned last = m_filename.find_last_of('/');
+
+    m_output_filename = m_filename.substr(0,last);
+    m_output_filename = m_output_filename + "/output.";
 
     // If outside region set to -1
     // If inside region set to +1
+    // Magical color is: RGB = (255,0,23)
 
     for(int i = 1; i < m_level_set.m_width-1; i++)
     {
         for(int j = 1; j < m_level_set.m_height-1; j++)
         {
-            if (pow((pow(i-m_level_set.m_width/2,2)+pow(j-m_level_set.m_height/2,2)),0.5) < 25)
+            QRgb pixel = m_level_set.m_image.pixel(i-1, j-1);
+            if (qRed(pixel) == 255 && qGreen(pixel) == 0 && qBlue(pixel) == 0)
             {
                 m_level_set.m_u.at(i).at(j) = 1.0;
             }
@@ -50,19 +58,25 @@ void MainWindow::on_run_button_clicked()
     m_level_set.mirror_u();
 
     float t = 0;
-    int count = 0;
 
-    while(count <= 100000)
+    m_picture_num = m_picture_num+1;
+    std::string name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
+
+    // Loop while there are still more pictures
+    while(FILE *file = fopen(name.c_str(), "r"))
     {
-        t += m_level_set.descent_func();
+        m_level_set.m_image_master = QImage(QString::fromStdString(name));
 
-        m_level_set.paint_border();
-
-        if(count % 100 == 0)
+        // t is a measure of how fast the functional is moving
+        // Current scheme is to do 100 iterations
+        t = 0;
+        for(int i = 0; i < 100; i++)
         {
-            m_level_set.m_image.save(QString::fromStdString("./output/" + std::to_string(count) + ".png"));
+            t += m_level_set.descent_func();
         }
 
+        m_level_set.paint_border();
+        m_level_set.m_image.save(QString::fromStdString(m_output_filename + std::to_string(m_picture_num) + m_file_extension));
 
         QPixmap pixmap(QPixmap::fromImage(m_level_set.m_image));
         QGraphicsScene* scene = new QGraphicsScene;
@@ -74,10 +88,12 @@ void MainWindow::on_run_button_clicked()
         ui->graphicsView->repaint();
         qApp->processEvents();
 
-        delete scene;
-
-        count += 1;
+        m_picture_num += 1;
+        name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
     }
+
+    // Set the new working directory to the output directory
+    m_filename = m_output_filename;
 }
 
 void MainWindow::on_open_button_clicked()
@@ -95,7 +111,24 @@ void MainWindow::get_picture(){
     QString fileName = QFileDialog::getOpenFileName(this,
        tr("Open Image"), QDir::homePath().append("/Documents"), tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
 
-    ui->open_label->setText(fileName);
+    // Remove the number and extension from picture
+    // Assume that the first picture starts with 1
+    // ~/Documents/pic.1.bmp -> ~/Documents/pic
+    m_filename = fileName.toStdString();
+    unsigned first = 0;
+    unsigned last = 0;
+
+    for(std::string::size_type i = 0; i < m_filename.size(); ++i) {
+        if(m_filename.at(i) == '.')
+        {
+            first = last;
+            last = i;
+        }
+    }
+
+    m_picture_num = stoi(m_filename.substr(first+1,last-first-1));
+    m_file_extension = m_filename.substr(last,std::string::npos);
+    m_filename = m_filename.substr(0,first+1);
 
     QImage image(fileName);
 
@@ -107,4 +140,43 @@ void MainWindow::get_picture(){
     ui->graphicsView->setScene(scene);
 
     m_level_set = LevelSet(image);
+}
+
+void MainWindow::on_previous_button_clicked()
+{
+    m_picture_num = std::max(m_picture_num-1,0);
+
+    // Load Image
+    QImage image(QString::fromStdString(m_filename + std::to_string(m_picture_num) + m_file_extension));
+
+    QPixmap pixmap(QPixmap::fromImage(image));
+    QGraphicsScene* scene = new QGraphicsScene;
+    scene->addPixmap(pixmap);
+
+    ui->graphicsView->fitInView(scene->itemsBoundingRect() ,Qt::KeepAspectRatio);
+    ui->graphicsView->setScene(scene);
+}
+
+void MainWindow::on_next_button_clicked()
+{
+    m_picture_num = m_picture_num+1;
+
+    // Check if picture exists
+    std::string name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
+    if (FILE *file = fopen(name.c_str(), "r"))
+    {
+    }
+    else
+    {
+        m_picture_num = m_picture_num-1;
+    }
+
+    QImage image(QString::fromStdString(m_filename + std::to_string(m_picture_num) + m_file_extension));
+
+    QPixmap pixmap(QPixmap::fromImage(image));
+    QGraphicsScene* scene = new QGraphicsScene;
+    scene->addPixmap(pixmap);
+
+    ui->graphicsView->fitInView(scene->itemsBoundingRect() ,Qt::KeepAspectRatio);
+    ui->graphicsView->setScene(scene);
 }

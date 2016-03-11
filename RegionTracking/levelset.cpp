@@ -255,7 +255,7 @@ float LevelSet::cost_func(int i, int j)
 {
     QRgb pixel = m_image.pixel(i-1, j-1);
 
-    return pow(qRed(pixel) - 0,2) - pow(qRed(pixel) - 255,2) + pow(qGreen(pixel) - 0,2) - pow(qGreen(pixel) - 255,2) + pow(qBlue(pixel) - 0,2) - pow(qBlue(pixel) - 255,2);
+    return pow(qRed(pixel) - 255,2) - pow(qRed(pixel) - 0,2) + pow(qGreen(pixel) - 255,2) - pow(qGreen(pixel) - 0,2) + pow(qBlue(pixel) - 255,2) - pow(qBlue(pixel) - 0,2);
 }
 
 void LevelSet::paint_border()
@@ -272,7 +272,7 @@ void LevelSet::paint_border()
         {
             white_neighbours = 0;
 
-            if(m_u.at(i).at(j) > 0)
+            if(m_u.at(i).at(j) >= 0)
             {
                 if (m_u.at(i-1).at(j) < 0)
                 {
