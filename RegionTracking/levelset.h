@@ -12,15 +12,9 @@ public:
     LevelSet();
     LevelSet(QImage image);
     float descent_func();
-    float grad_plus(int i,int j);
-    float grad_minus(int i,int j);
-    float central_diff(int i, int j, int direction);
-    float second_deriv(int i, int j, int first_direction, int second_direction);
-    float first_deriv(int i, int j, int direc, int var);
-    float curvature(int i, int j);
-    float cost_func(int i, int j);
     void paint_border();
     void mirror_u();
+    void calculate_parameters();
     ~LevelSet();
 
     QImage m_image_master;
@@ -28,8 +22,32 @@ public:
     int m_width;
     int m_height;
     std::vector<std::vector<float> > m_u;
+    int m_coef_length;
+    int m_coef_mean;
+    int m_coef_variance;
+    int m_coef_area;
+    int m_coef_com;
 
 private:
+    float grad_plus(int i,int j);
+    float grad_minus(int i,int j);
+    float central_diff(int i, int j, int direction);
+    float second_deriv(int i, int j, int first_direction, int second_direction);
+    float first_deriv(int i, int j, int direc, int var);
+
+    float curvature(int i, int j);
+    float cost_func(int i, int j);
+    float area_func();
+    float mean_func(int i, int j);
+    float variance_func(int i, int j);
+    float com_func(int i, int j);
+    float segmentation_func(int i, int j);
+
+    void calculate_area();
+    void calculate_mean();
+    void calculate_variance();
+    void calculate_com();
+
     std::vector<std::vector<float> > m_u_temp;
 
     std::vector<std::vector<float> > m_central_diff_x;
@@ -50,6 +68,25 @@ private:
 
     std::vector<std::vector<float> > m_K;
     std::vector<std::vector<float> > m_F;
+
+    // COM needs a 2-tuple (x,y) coordinate
+    // Mean & Variance need a 3-tuple (RGB)
+    // Original image measures
+    float m_orig_area;
+    std::vector<float> m_orig_com;
+    std::vector<float> m_orig_mean_inside;
+    std::vector<float> m_orig_mean_outside;
+    std::vector<float> m_orig_variance_inside;
+    std::vector<float> m_orig_variance_outside;
+
+    // Evolving measures
+    float m_area_inside;
+    float m_area_outside;
+    std::vector<float> m_com;
+    std::vector<float> m_mean_inside;
+    std::vector<float> m_mean_outside;
+    std::vector<float> m_variance_inside;
+    std::vector<float> m_variance_outside;
 };
 
 #endif // LEVELSET_H

@@ -34,6 +34,14 @@ void MainWindow::on_run_button_clicked()
     m_output_filename = m_filename.substr(0,last);
     m_output_filename = m_output_filename + "/output.";
 
+    // Assign coefficients
+
+    m_level_set.m_coef_length = stoi(ui->length_edit->text().toStdString());
+    m_level_set.m_coef_mean = stoi(ui->mean_edit->text().toStdString());
+    m_level_set.m_coef_variance = stoi(ui->variance_edit->text().toStdString());
+    m_level_set.m_coef_area = stoi(ui->area_edit->text().toStdString());
+    m_level_set.m_coef_com = stoi(ui->com_edit->text().toStdString());
+
     // If outside region set to -1
     // If inside region set to +1
     // Magical color is: RGB = (255,0,23)
@@ -56,6 +64,7 @@ void MainWindow::on_run_button_clicked()
 
     // Mirror image the border
     m_level_set.mirror_u();
+    m_level_set.calculate_parameters();
 
     float t = 0;
 
@@ -75,6 +84,8 @@ void MainWindow::on_run_button_clicked()
             t += m_level_set.descent_func();
         }
 
+        m_level_set.calculate_parameters();
+
         m_level_set.paint_border();
         m_level_set.m_image.save(QString::fromStdString(m_output_filename + std::to_string(m_picture_num) + m_file_extension));
 
@@ -87,6 +98,9 @@ void MainWindow::on_run_button_clicked()
 
         ui->graphicsView->repaint();
         qApp->processEvents();
+
+        // Close file and prepare new file name
+        fclose(file);
 
         m_picture_num += 1;
         name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
@@ -165,6 +179,7 @@ void MainWindow::on_next_button_clicked()
     std::string name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
     if (FILE *file = fopen(name.c_str(), "r"))
     {
+        fclose(file);
     }
     else
     {
