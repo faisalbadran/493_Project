@@ -584,3 +584,11 @@ void LevelSet::calculate_variance(){
     m_variance_outside.at(1) = variance_outside.at(1)/area_outside;
     m_variance_outside.at(2) = variance_outside.at(2)/area_outside;
 }
+
+void LevelSet::unitize_u(){
+    for(int i = 0; i < m_width; i++){
+        for(int j = 0; j < m_height; j++){
+            m_u.at(i).at(j) = m_u.at(i).at(j)/fabs(m_u.at(i).at(j));
+        }
+    }
+}

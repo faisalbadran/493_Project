@@ -92,6 +92,9 @@ void MainWindow::on_run_button_clicked()
         m_level_set.paint_border();
         m_level_set.m_image.save(QString::fromStdString(m_output_filename + std::to_string(m_picture_num) + m_file_extension));
 
+        // reset u to +/- 1
+        m_level_set.unitize_u();
+
         QPixmap pixmap(QPixmap::fromImage(m_level_set.m_image));
         QGraphicsScene* scene = new QGraphicsScene;
         scene->addPixmap(pixmap);

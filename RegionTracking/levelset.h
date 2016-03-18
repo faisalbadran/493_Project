@@ -15,6 +15,7 @@ public:
     void paint_border();
     void mirror_u();
     void calculate_parameters();
+    void unitize_u();
     ~LevelSet();
 
     QImage m_image_master;
