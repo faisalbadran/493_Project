@@ -302,12 +302,12 @@ float LevelSet::mean_func(int i, int j){
 
     float val = 0;
 
-    val += 2*(m_mean_inside[0] - m_orig_mean_inside[0])*(qRed(pixel)-m_mean_inside[0])/m_area_inside;
-    val += 2*(m_mean_outside[0] - m_orig_mean_outside[0])*(qRed(pixel)-m_mean_outside[0])/m_area_outside;
-    val += 2*(m_mean_inside[0] - m_orig_mean_inside[0])*(qGreen(pixel)-m_mean_inside[0])/m_area_inside;
-    val += 2*(m_mean_outside[0] - m_orig_mean_outside[0])*(qGreen(pixel)-m_mean_outside[0])/m_area_outside;
-    val += 2*(m_mean_inside[0] - m_orig_mean_inside[0])*(qBlue(pixel)-m_mean_inside[0])/m_area_inside;
-    val += 2*(m_mean_outside[0] - m_orig_mean_outside[0])*(qBlue(pixel)-m_mean_outside[0])/m_area_outside;
+    val += 2*(m_mean_inside.at(0) - m_orig_mean_inside.at(0))*(qRed(pixel)-m_mean_inside.at(0))/m_area_inside;
+    val += 2*(m_mean_outside.at(0) - m_orig_mean_outside.at(0))*(qRed(pixel)-m_mean_outside.at(0))/m_area_outside;
+    val += 2*(m_mean_inside.at(1) - m_orig_mean_inside.at(1))*(qGreen(pixel)-m_mean_inside.at(1))/m_area_inside;
+    val += 2*(m_mean_outside.at(1) - m_orig_mean_outside.at(1))*(qGreen(pixel)-m_mean_outside.at(1))/m_area_outside;
+    val += 2*(m_mean_inside.at(2) - m_orig_mean_inside.at(2))*(qBlue(pixel)-m_mean_inside.at(2))/m_area_inside;
+    val += 2*(m_mean_outside.at(2) - m_orig_mean_outside.at(2))*(qBlue(pixel)-m_mean_outside.at(2))/m_area_outside;
 
     return val;
 }
@@ -319,12 +319,12 @@ float LevelSet::variance_func(int i, int j){
 
     float val = 0;
 
-    val += 2*(m_variance_inside[0] - m_orig_variance_inside[0])*(qRed(pixel)-m_variance_inside[0])/m_area_inside;
-    val += 2*(m_variance_outside[0] - m_orig_variance_outside[0])*(qRed(pixel)-m_variance_outside[0])/m_area_outside;
-    val += 2*(m_variance_inside[0] - m_orig_variance_inside[0])*(qGreen(pixel)-m_variance_inside[0])/m_area_inside;
-    val += 2*(m_variance_outside[0] - m_orig_variance_outside[0])*(qGreen(pixel)-m_variance_outside[0])/m_area_outside;
-    val += 2*(m_variance_inside[0] - m_orig_variance_inside[0])*(qBlue(pixel)-m_variance_inside[0])/m_area_inside;
-    val += 2*(m_variance_outside[0] - m_orig_variance_outside[0])*(qBlue(pixel)-m_variance_outside[0])/m_area_outside;
+    val += 2*(m_variance_inside.at(0) - m_orig_variance_inside.at(0))*(qRed(pixel)*qRed(pixel)-m_variance_inside.at(0))/m_area_inside;
+    val += 2*(m_variance_outside.at(0) - m_orig_variance_outside.at(0))*(qRed(pixel)*qRed(pixel)-m_variance_outside.at(0))/m_area_outside;
+    val += 2*(m_variance_inside.at(1) - m_orig_variance_inside.at(1))*(qGreen(pixel)*qGreen(pixel)-m_variance_inside.at(1))/m_area_inside;
+    val += 2*(m_variance_outside.at(1) - m_orig_variance_outside.at(1))*(qGreen(pixel)*qGreen(pixel)-m_variance_outside.at(1))/m_area_outside;
+    val += 2*(m_variance_inside.at(2) - m_orig_variance_inside.at(2))*(qBlue(pixel)*qBlue(pixel)-m_variance_inside.at(2))/m_area_inside;
+    val += 2*(m_variance_outside.at(2) - m_orig_variance_outside.at(2))*(qBlue(pixel)*qBlue(pixel)-m_variance_outside.at(2))/m_area_outside;
 
     return val;
 }
@@ -334,8 +334,8 @@ float LevelSet::variance_func(int i, int j){
 float LevelSet::com_func(int i, int j){
     float val = 0;
 
-    val += 2*(m_com[0] - m_orig_com[0])*(i - m_com[0])/m_area_inside;
-    val += 2*(m_com[1] - m_orig_com[1])*(j - m_com[1])/m_area_inside;
+    val += 2*(m_com.at(0) - m_orig_com.at(0))*(i - m_com.at(0))/m_area_inside;
+    val += 2*(m_com.at(1) - m_orig_com.at(1))*(j - m_com.at(1))/m_area_inside;
 
     return val;
 }
@@ -473,14 +473,14 @@ void LevelSet::calculate_com(){
         for(int j = 0; j < m_height; j++){
             if(m_u.at(i).at(j) >= 0){
                 area += 1;
-                com[0] += i;
-                com[1] += j;
+                com.at(0) += i;
+                com.at(1) += j;
             }
         }
     }
 
-    m_com[0] = com[0]/area;
-    m_com[1] = com[1]/area;
+    m_com.at(0) = com.at(0)/area;
+    m_com.at(1) = com.at(1)/area;
 }
 
 void LevelSet::calculate_mean(){
@@ -499,26 +499,26 @@ void LevelSet::calculate_mean(){
 
             if(m_u.at(i).at(j) >= 0){
                 area_inside += 1;
-                mean_inside[0] += qRed(pixel);
-                mean_inside[1] += qGreen(pixel);
-                mean_inside[2] += qBlue(pixel);
+                mean_inside.at(0) += qRed(pixel);
+                mean_inside.at(1) += qGreen(pixel);
+                mean_inside.at(2) += qBlue(pixel);
             }
-            if(m_u.at(i).at(j) >= 0){
+            else{
                 area_outside += 1;
-                mean_outside[0] += qRed(pixel);
-                mean_outside[1] += qGreen(pixel);
-                mean_outside[2] += qBlue(pixel);
+                mean_outside.at(0) += qRed(pixel);
+                mean_outside.at(1) += qGreen(pixel);
+                mean_outside.at(2) += qBlue(pixel);
             }
         }
     }
 
-    m_mean_inside[0] = mean_inside[0]/area_inside;
-    m_mean_inside[1] = mean_inside[1]/area_inside;
-    m_mean_inside[2] = mean_inside[2]/area_inside;
+    m_mean_inside.at(0) = mean_inside.at(0)/area_inside;
+    m_mean_inside.at(1) = mean_inside.at(1)/area_inside;
+    m_mean_inside.at(2) = mean_inside.at(2)/area_inside;
 
-    m_mean_outside[0] = mean_outside[0]/area_outside;
-    m_mean_outside[1] = mean_outside[1]/area_outside;
-    m_mean_outside[2] = mean_outside[2]/area_outside;
+    m_mean_outside.at(0) = mean_outside.at(0)/area_outside;
+    m_mean_outside.at(1) = mean_outside.at(1)/area_outside;
+    m_mean_outside.at(2) = mean_outside.at(2)/area_outside;
 }
 
 void LevelSet::calculate_variance(){
@@ -537,24 +537,24 @@ void LevelSet::calculate_variance(){
 
             if(m_u.at(i).at(j) >= 0){
                 area_inside += 1;
-                variance_inside[0] += qRed(pixel)*qRed(pixel);
-                variance_inside[1] += qGreen(pixel)*qGreen(pixel);
-                variance_inside[2] += qBlue(pixel)*qBlue(pixel);
+                variance_inside.at(0) += qRed(pixel)*qRed(pixel);
+                variance_inside.at(1) += qGreen(pixel)*qGreen(pixel);
+                variance_inside.at(2) += qBlue(pixel)*qBlue(pixel);
             }
-            if(m_u.at(i).at(j) >= 0){
+            else{
                 area_outside += 1;
-                variance_outside[0] += qRed(pixel)*qRed(pixel);
-                variance_outside[1] += qGreen(pixel)*qGreen(pixel);
-                variance_outside[2] += qBlue(pixel)*qBlue(pixel);
+                variance_outside.at(0) += qRed(pixel)*qRed(pixel);
+                variance_outside.at(1) += qGreen(pixel)*qGreen(pixel);
+                variance_outside.at(2) += qBlue(pixel)*qBlue(pixel);
             }
         }
     }
 
-    m_variance_inside[0] = variance_inside[0]/area_inside;
-    m_variance_inside[1] = variance_inside[1]/area_inside;
-    m_variance_inside[2] = variance_inside[2]/area_inside;
+    m_variance_inside.at(0) = variance_inside.at(0)/area_inside;
+    m_variance_inside.at(1) = variance_inside.at(1)/area_inside;
+    m_variance_inside.at(2) = variance_inside.at(2)/area_inside;
 
-    m_variance_outside[0] = variance_outside[0]/area_outside;
-    m_variance_outside[1] = variance_outside[1]/area_outside;
-    m_variance_outside[2] = variance_outside[2]/area_outside;
+    m_variance_outside.at(0) = variance_outside.at(0)/area_outside;
+    m_variance_outside.at(1) = variance_outside.at(1)/area_outside;
+    m_variance_outside.at(2) = variance_outside.at(2)/area_outside;
 }

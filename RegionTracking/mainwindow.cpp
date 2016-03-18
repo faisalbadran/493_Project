@@ -36,11 +36,11 @@ void MainWindow::on_run_button_clicked()
 
     // Assign coefficients
 
-    m_level_set.m_coef_length = stoi(ui->length_edit->text().toStdString());
-    m_level_set.m_coef_mean = stoi(ui->mean_edit->text().toStdString());
-    m_level_set.m_coef_variance = stoi(ui->variance_edit->text().toStdString());
-    m_level_set.m_coef_area = stoi(ui->area_edit->text().toStdString());
-    m_level_set.m_coef_com = stoi(ui->com_edit->text().toStdString());
+    m_level_set.m_coef_length = stof(ui->length_edit->text().toStdString());
+    m_level_set.m_coef_mean = stof(ui->mean_edit->text().toStdString());
+    m_level_set.m_coef_variance = stof(ui->variance_edit->text().toStdString());
+    m_level_set.m_coef_area = stof(ui->area_edit->text().toStdString());
+    m_level_set.m_coef_com = stof(ui->com_edit->text().toStdString());
 
     // If outside region set to -1
     // If inside region set to +1
@@ -84,6 +84,7 @@ void MainWindow::on_run_button_clicked()
             t += m_level_set.descent_func();
         }
 
+        // Refresh parameters
         m_level_set.calculate_parameters();
 
         m_level_set.paint_border();
