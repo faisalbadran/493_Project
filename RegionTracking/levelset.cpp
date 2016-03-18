@@ -271,24 +271,32 @@ float LevelSet::curvature(int i, int j)
 float LevelSet::cost_func(int i, int j)
 {
     float area_func_val = 0;
-    float mean_func_val = 0;
-    float variance_func_val = 0;
+    float mean_inside_func_val = 0;
+    float mean_outside_func_val = 0;
+    float variance_inside_func_val = 0;
+    float variance_outside_func_val = 0;
     float com_func_val = 0;
 
     if(m_coef_area != 0){
         area_func_val = m_coef_area*area_func();
     }
-    if(m_coef_mean != 0){
-        mean_func_val = m_coef_mean*mean_func(i,j);
+    if(m_coef_mean_inside != 0 ){
+        mean_inside_func_val = m_coef_mean_inside*mean_inside_func(i,j);
     }
-    if(m_coef_variance != 0){
-        variance_func_val = m_coef_variance*variance_func(i,j);
+    if(m_coef_mean_outside != 0 ){
+        mean_outside_func_val = m_coef_mean_outside*mean_outside_func(i,j);
+    }
+    if(m_coef_variance_inside != 0){
+        variance_inside_func_val = m_coef_variance_inside*variance_inside_func(i,j);
+    }
+    if(m_coef_variance_outside != 0){
+        variance_outside_func_val = m_coef_variance_outside*variance_outside_func(i,j);
     }
     if(m_coef_com != 0){
         com_func_val = m_coef_com*com_func(i,j);
     }
 
-    return area_func_val + mean_func_val + variance_func_val + com_func_val;
+    return area_func_val + mean_inside_func_val + mean_outside_func_val + variance_inside_func_val + variance_outside_func_val + com_func_val;
 }
 
 // Area functional
@@ -297,16 +305,25 @@ float LevelSet::area_func(){
 }
 
 // Mean functional
-float LevelSet::mean_func(int i, int j){
+float LevelSet::mean_inside_func(int i, int j){
     QRgb pixel = m_image.pixel(i-1, j-1);
 
     float val = 0;
 
     val += 2*(m_mean_inside.at(0) - m_orig_mean_inside.at(0))*(qRed(pixel)-m_mean_inside.at(0))/m_area_inside;
-    val += 2*(m_mean_outside.at(0) - m_orig_mean_outside.at(0))*(qRed(pixel)-m_mean_outside.at(0))/m_area_outside;
     val += 2*(m_mean_inside.at(1) - m_orig_mean_inside.at(1))*(qGreen(pixel)-m_mean_inside.at(1))/m_area_inside;
-    val += 2*(m_mean_outside.at(1) - m_orig_mean_outside.at(1))*(qGreen(pixel)-m_mean_outside.at(1))/m_area_outside;
     val += 2*(m_mean_inside.at(2) - m_orig_mean_inside.at(2))*(qBlue(pixel)-m_mean_inside.at(2))/m_area_inside;
+
+    return val;
+}
+
+float LevelSet::mean_outside_func(int i, int j){
+    QRgb pixel = m_image.pixel(i-1, j-1);
+
+    float val = 0;
+
+    val += 2*(m_mean_outside.at(0) - m_orig_mean_outside.at(0))*(qRed(pixel)-m_mean_outside.at(0))/m_area_outside;
+    val += 2*(m_mean_outside.at(1) - m_orig_mean_outside.at(1))*(qGreen(pixel)-m_mean_outside.at(1))/m_area_outside;
     val += 2*(m_mean_outside.at(2) - m_orig_mean_outside.at(2))*(qBlue(pixel)-m_mean_outside.at(2))/m_area_outside;
 
     return val;
@@ -314,16 +331,25 @@ float LevelSet::mean_func(int i, int j){
 
 // Variance functional
 
-float LevelSet::variance_func(int i, int j){
+float LevelSet::variance_inside_func(int i, int j){
     QRgb pixel = m_image.pixel(i-1, j-1);
 
     float val = 0;
 
     val += 2*(m_variance_inside.at(0) - m_orig_variance_inside.at(0))*(qRed(pixel)*qRed(pixel)-m_variance_inside.at(0))/m_area_inside;
-    val += 2*(m_variance_outside.at(0) - m_orig_variance_outside.at(0))*(qRed(pixel)*qRed(pixel)-m_variance_outside.at(0))/m_area_outside;
     val += 2*(m_variance_inside.at(1) - m_orig_variance_inside.at(1))*(qGreen(pixel)*qGreen(pixel)-m_variance_inside.at(1))/m_area_inside;
-    val += 2*(m_variance_outside.at(1) - m_orig_variance_outside.at(1))*(qGreen(pixel)*qGreen(pixel)-m_variance_outside.at(1))/m_area_outside;
     val += 2*(m_variance_inside.at(2) - m_orig_variance_inside.at(2))*(qBlue(pixel)*qBlue(pixel)-m_variance_inside.at(2))/m_area_inside;
+
+    return val;
+}
+
+float LevelSet::variance_outside_func(int i, int j){
+    QRgb pixel = m_image.pixel(i-1, j-1);
+
+    float val = 0;
+
+    val += 2*(m_variance_outside.at(0) - m_orig_variance_outside.at(0))*(qRed(pixel)*qRed(pixel)-m_variance_outside.at(0))/m_area_outside;
+    val += 2*(m_variance_outside.at(1) - m_orig_variance_outside.at(1))*(qGreen(pixel)*qGreen(pixel)-m_variance_outside.at(1))/m_area_outside;
     val += 2*(m_variance_outside.at(2) - m_orig_variance_outside.at(2))*(qBlue(pixel)*qBlue(pixel)-m_variance_outside.at(2))/m_area_outside;
 
     return val;

@@ -37,10 +37,13 @@ void MainWindow::on_run_button_clicked()
     // Assign coefficients
 
     m_level_set.m_coef_length = stof(ui->length_edit->text().toStdString());
-    m_level_set.m_coef_mean = stof(ui->mean_edit->text().toStdString());
-    m_level_set.m_coef_variance = stof(ui->variance_edit->text().toStdString());
+    m_level_set.m_coef_mean_inside = stof(ui->mean_inside_edit->text().toStdString());
+    m_level_set.m_coef_mean_outside = stof(ui->mean_outside_edit->text().toStdString());
+    m_level_set.m_coef_variance_inside = stof(ui->variance_inside_edit->text().toStdString());
+    m_level_set.m_coef_variance_outside = stof(ui->variance_outside_edit->text().toStdString());
     m_level_set.m_coef_area = stof(ui->area_edit->text().toStdString());
     m_level_set.m_coef_com = stof(ui->com_edit->text().toStdString());
+    m_level_set.m_iterations = stoi(ui->iterations_edit->text().toStdString());
 
     // If outside region set to -1
     // If inside region set to +1
@@ -81,7 +84,7 @@ void MainWindow::on_run_button_clicked()
         // t is a measure of how fast the functional is moving
         // Current scheme is to do 100 iterations
         t = 0;
-        for(int i = 0; i < 100; i++)
+        for(int i = 0; i < m_level_set.m_iterations; i++)
         {
             t += m_level_set.descent_func();
         }

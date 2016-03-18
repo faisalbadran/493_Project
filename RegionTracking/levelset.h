@@ -22,11 +22,14 @@ public:
     int m_width;
     int m_height;
     std::vector<std::vector<float> > m_u;
-    int m_coef_length;
-    int m_coef_mean;
-    int m_coef_variance;
-    int m_coef_area;
-    int m_coef_com;
+    float m_coef_length;
+    float m_coef_mean_inside;
+    float m_coef_mean_outside;
+    float m_coef_variance_inside;
+    float m_coef_variance_outside;
+    float m_coef_area;
+    float m_coef_com;
+    int m_iterations;
 
 private:
     float grad_plus(int i,int j);
@@ -38,8 +41,10 @@ private:
     float curvature(int i, int j);
     float cost_func(int i, int j);
     float area_func();
-    float mean_func(int i, int j);
-    float variance_func(int i, int j);
+    float mean_inside_func(int i, int j);
+    float mean_outside_func(int i, int j);
+    float variance_inside_func(int i, int j);
+    float variance_outside_func(int i, int j);
     float com_func(int i, int j);
     float segmentation_func(int i, int j);
 
