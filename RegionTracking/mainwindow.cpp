@@ -76,7 +76,7 @@ void MainWindow::on_run_button_clicked()
     // Loop while there are still more pictures
     while(FILE *file = fopen(name.c_str(), "r"))
     {
-        m_level_set.m_image_master = QImage(QString::fromStdString(name));
+        m_level_set.m_image_master = QImage(QString::fromStdString(name)).convertToFormat(QImage::Format_RGB32);
 
         // Refresh parameters
         m_level_set.calculate_parameters();
@@ -148,6 +148,7 @@ void MainWindow::get_picture(){
     m_filename = m_filename.substr(0,first+1);
 
     QImage image(fileName);
+    image = image.convertToFormat(QImage::Format_RGB32);
 
     QPixmap pixmap(QPixmap::fromImage(image));
     QGraphicsScene* scene = new QGraphicsScene;
