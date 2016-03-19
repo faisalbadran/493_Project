@@ -166,7 +166,7 @@
       <item row="5" column="3">
        <widget class="QLineEdit" name="iterations_edit">
         <property name="text">
-         <string>0</string>
+         <string>100</string>
         </property>
        </widget>
       </item>
