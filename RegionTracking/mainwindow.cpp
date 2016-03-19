@@ -73,13 +73,20 @@ void MainWindow::on_run_button_clicked()
     m_picture_num = m_picture_num+1;
     std::string name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
 
+    // Get parameters from first image and paint border
+    // This is done because the loaded image is
+    // the first image with the region coloured in
+    m_level_set.m_image_master = QImage(QString::fromStdString(name)).convertToFormat(QImage::Format_RGB32);
+    m_level_set.calculate_parameters();
+    m_level_set.paint_border();
+    m_level_set.m_image.save(QString::fromStdString(m_output_filename + std::to_string(m_picture_num) + m_file_extension));
+    m_picture_num = m_picture_num+1;
+    name = (m_filename + std::to_string(m_picture_num) + m_file_extension);
+
     // Loop while there are still more pictures
     while(FILE *file = fopen(name.c_str(), "r"))
     {
         m_level_set.m_image_master = QImage(QString::fromStdString(name)).convertToFormat(QImage::Format_RGB32);
-
-        // Refresh parameters
-        m_level_set.calculate_parameters();
 
         // t is a measure of how fast the functional is moving
         // Current scheme is to do 100 iterations
@@ -88,6 +95,9 @@ void MainWindow::on_run_button_clicked()
         {
             t += m_level_set.descent_func();
         }
+
+        // Refresh parameters
+        m_level_set.calculate_parameters();
 
         m_level_set.paint_border();
         m_level_set.m_image.save(QString::fromStdString(m_output_filename + std::to_string(m_picture_num) + m_file_extension));
