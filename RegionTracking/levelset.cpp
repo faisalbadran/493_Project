@@ -278,22 +278,22 @@ float LevelSet::cost_func(int i, int j)
     float com_func_val = 0;
 
     if(m_coef_area != 0){
-        area_func_val = m_coef_area*area_func();
+        area_func_val = -m_coef_area*area_func();
     }
     if(m_coef_mean_inside != 0 ){
-        mean_inside_func_val = m_coef_mean_inside*mean_inside_func(i,j);
+        mean_inside_func_val = -m_coef_mean_inside*mean_inside_func(i,j);
     }
     if(m_coef_mean_outside != 0 ){
-        mean_outside_func_val = m_coef_mean_outside*mean_outside_func(i,j);
+        mean_outside_func_val = -m_coef_mean_outside*mean_outside_func(i,j);
     }
     if(m_coef_variance_inside != 0){
-        variance_inside_func_val = m_coef_variance_inside*variance_inside_func(i,j);
+        variance_inside_func_val = -m_coef_variance_inside*variance_inside_func(i,j);
     }
     if(m_coef_variance_outside != 0){
-        variance_outside_func_val = m_coef_variance_outside*variance_outside_func(i,j);
+        variance_outside_func_val = -m_coef_variance_outside*variance_outside_func(i,j);
     }
     if(m_coef_com != 0){
-        com_func_val = m_coef_com*com_func(i,j);
+        com_func_val = -m_coef_com*com_func(i,j);
     }
 
     return area_func_val + mean_inside_func_val + mean_outside_func_val + variance_inside_func_val + variance_outside_func_val + com_func_val;
@@ -371,7 +371,7 @@ float LevelSet::segmentation_func(int i, int j)
 {
     QRgb pixel = m_image.pixel(i-1, j-1);
 
-    return pow(qRed(pixel) - 255,2) - pow(qRed(pixel) - 0,2) + pow(qGreen(pixel) - 255,2) - pow(qGreen(pixel) - 0,2) + pow(qBlue(pixel) - 255,2) - pow(qBlue(pixel) - 0,2);
+    return pow(qRed(pixel) - m_mean_inside.at(0),2) + pow(qGreen(pixel) - m_mean_inside.at(1),2) + pow(qBlue(pixel) - m_mean_inside.at(2),2);
 }
 
 void LevelSet::paint_border()
