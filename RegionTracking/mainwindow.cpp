@@ -43,6 +43,7 @@ void MainWindow::on_run_button_clicked()
     m_level_set.m_coef_variance_outside = stof(ui->variance_outside_edit->text().toStdString());
     m_level_set.m_coef_area = stof(ui->area_edit->text().toStdString());
     m_level_set.m_coef_com = stof(ui->com_edit->text().toStdString());
+    m_level_set.m_coef_pixel = stof(ui->pixel_edit->text().toStdString());
     m_level_set.m_iterations = stoi(ui->iterations_edit->text().toStdString());
 
     // If outside region set to -1
@@ -103,7 +104,7 @@ void MainWindow::on_run_button_clicked()
         m_level_set.m_image.save(QString::fromStdString(m_output_filename + std::to_string(m_picture_num) + m_file_extension));
 
         // reset u to +/- 1
-        m_level_set.unitize_u();
+        //m_level_set.unitize_u();
 
         QPixmap pixmap(QPixmap::fromImage(m_level_set.m_image));
         QGraphicsScene* scene = new QGraphicsScene;

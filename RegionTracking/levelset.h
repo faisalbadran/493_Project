@@ -30,6 +30,7 @@ public:
     float m_coef_variance_outside;
     float m_coef_area;
     float m_coef_com;
+    float m_coef_pixel;
     int m_iterations;
 
 private:
