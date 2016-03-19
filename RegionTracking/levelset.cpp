@@ -295,6 +295,9 @@ float LevelSet::cost_func(int i, int j)
     if(m_coef_com != 0){
         com_func_val = -m_coef_com*com_func(i,j);
     }
+    if(m_coef_pixel != 0){
+        com_func_val = m_coef_pixel*segmentation_func(i,j);
+    }
 
     return area_func_val + mean_inside_func_val + mean_outside_func_val + variance_inside_func_val + variance_outside_func_val + com_func_val;
 }
